@@ -365,18 +365,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getShareData(name, details, formattedSchedule) {
-    const activityUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
-      name
-    )}`;
+    const activityUrl = `${window.location.origin}${window.location.pathname}`;
     const shareTitle = `${name} at Mergington High School`;
     const shareText = `Check out ${name}! ${details.description} Schedule: ${formattedSchedule}`;
+    const maxShareTextLength = 220;
+    const trimmedShareText =
+      shareText.length > maxShareTextLength
+        ? `${shareText.slice(0, maxShareTextLength - 1).trim()}…`
+        : shareText;
 
     return {
       activityUrl,
       shareTitle,
-      shareText,
+      shareText: trimmedShareText,
       encodedUrl: encodeURIComponent(activityUrl),
-      encodedText: encodeURIComponent(shareText),
+      encodedText: encodeURIComponent(trimmedShareText),
     };
   }
 
@@ -659,7 +662,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (error.name !== "AbortError") {
             console.error("Error sharing activity:", error);
             showMessage(
-              "Unable to share this activity. Please try another share button.",
+              "Unable to share this activity. Please try WhatsApp, Facebook, or X instead.",
               "error"
             );
           }
