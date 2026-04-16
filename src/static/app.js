@@ -601,9 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           <a
             class="share-button"
-            href="https://wa.me/?text=${encodeURIComponent(
-              `${shareData.shareText} ${shareData.activityUrl}`
-            )}"
+            href="https://wa.me/?text=${shareData.encodedText}%20${shareData.encodedUrl}"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Share this activity on WhatsApp"
@@ -660,7 +658,10 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
           if (error.name !== "AbortError") {
             console.error("Error sharing activity:", error);
-            showMessage("Sharing is unavailable right now.", "error");
+            showMessage(
+              "Unable to share this activity. Please try another share button.",
+              "error"
+            );
           }
         }
       });
