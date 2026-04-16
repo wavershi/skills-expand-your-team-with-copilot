@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
   const supportsNativeShare = typeof navigator.share === "function";
+  const MAX_SHARE_TEXT_LENGTH = 220;
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -367,15 +368,18 @@ document.addEventListener("DOMContentLoaded", () => {
   function getShareData(name, details, formattedSchedule) {
     const activityUrl = `${window.location.origin}${window.location.pathname}`;
     const shareTitle = `${name} at Mergington High School`;
-    const cleanedDescription = details.description.trim();
+    const descriptionSource =
+      typeof details.description === "string" && details.description.trim()
+        ? details.description
+        : "Activity details are available on the school website";
+    const cleanedDescription = descriptionSource.trim();
     const descriptionSentence = /[.!?]$/.test(cleanedDescription)
       ? cleanedDescription
       : `${cleanedDescription}.`;
     const shareText = `Check out ${name}! ${descriptionSentence} Schedule: ${formattedSchedule}.`;
-    const maxShareTextLength = 220;
     const trimmedShareText =
-      shareText.length > maxShareTextLength
-        ? `${shareText.slice(0, maxShareTextLength - 1).trim()}…`
+      shareText.length > MAX_SHARE_TEXT_LENGTH
+        ? `${shareText.slice(0, MAX_SHARE_TEXT_LENGTH - 1).trim()}…`
         : shareText;
 
     return {
@@ -600,7 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ${
             supportsNativeShare
               ? `
-          <button class="share-button native-share-button" data-activity="${name}">
+          <button class="share-button native-share-button">
             Share
           </button>
           `
