@@ -367,7 +367,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function getShareData(name, details, formattedSchedule) {
     const activityUrl = `${window.location.origin}${window.location.pathname}`;
     const shareTitle = `${name} at Mergington High School`;
-    const shareText = `Check out ${name}! ${details.description} Schedule: ${formattedSchedule}`;
+    const cleanedDescription = details.description.trim();
+    const descriptionSentence = /[.!?]$/.test(cleanedDescription)
+      ? cleanedDescription
+      : `${cleanedDescription}.`;
+    const shareText = `Check out ${name}! ${descriptionSentence} Schedule: ${formattedSchedule}.`;
     const maxShareTextLength = 220;
     const trimmedShareText =
       shareText.length > maxShareTextLength
@@ -662,7 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (error.name !== "AbortError") {
             console.error("Error sharing activity:", error);
             showMessage(
-              "Unable to share this activity. Please try WhatsApp, Facebook, or X instead.",
+              "Unable to share. Please use one of the other sharing options.",
               "error"
             );
           }
