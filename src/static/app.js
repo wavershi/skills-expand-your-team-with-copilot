@@ -54,15 +54,27 @@ document.addEventListener("DOMContentLoaded", () => {
     currentTheme = theme;
     document.body.classList.toggle("dark-mode", theme === "dark");
 
-    if (themeToggleIcon && themeToggleLabel) {
+    if (themeToggleIcon && themeToggleLabel && themeToggleButton) {
       themeToggleIcon.textContent = theme === "dark" ? "☀️" : "🌙";
       themeToggleLabel.textContent = theme === "dark" ? "Light" : "Dark";
+      themeToggleButton.setAttribute(
+        "aria-label",
+        theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+      );
     }
   }
 
   function initializeTheme() {
     const savedTheme = localStorage.getItem("theme");
-    applyTheme(savedTheme === "dark" ? "dark" : "light");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      applyTheme(savedTheme);
+      return;
+    }
+
+    const prefersDarkMode =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(prefersDarkMode ? "dark" : "light");
   }
 
   function toggleTheme() {
