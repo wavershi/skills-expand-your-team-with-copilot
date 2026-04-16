@@ -50,6 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
     afternoon: { start: "15:00", end: "18:00" }, // After school hours
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
+  const supportsNativeShare = typeof navigator.share === "function";
+  const MAX_SHARE_TEXT_LENGTH = 220;
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -363,6 +365,32 @@ document.addEventListener("DOMContentLoaded", () => {
     return "academic";
   }
 
+  function getShareData(name, details, formattedSchedule) {
+    const activityUrl = `${window.location.origin}${window.location.pathname}`;
+    const shareTitle = `${name} at Mergington High School`;
+    const descriptionSource =
+      typeof details.description === "string" && details.description.trim()
+        ? details.description
+        : "Activity details are available on the school website";
+    const cleanedDescription = descriptionSource.trim();
+    const descriptionSentence = /[.!?]$/.test(cleanedDescription)
+      ? cleanedDescription
+      : `${cleanedDescription}.`;
+    const shareText = `Check out ${name}! ${descriptionSentence} Schedule: ${formattedSchedule}.`;
+    const trimmedShareText =
+      shareText.length > MAX_SHARE_TEXT_LENGTH
+        ? `${shareText.slice(0, MAX_SHARE_TEXT_LENGTH - 1).trim()}…`
+        : shareText;
+
+    return {
+      activityUrl,
+      shareTitle,
+      shareText: trimmedShareText,
+      encodedUrl: encodeURIComponent(activityUrl),
+      encodedText: encodeURIComponent(trimmedShareText),
+    };
+  }
+
   // Function to fetch activities from API with optional day and time filters
   async function fetchActivities() {
     // Show loading skeletons first
@@ -498,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareData = getShareData(name, details, formattedSchedule);
 
     // Create activity tag
     const tagHtml = `
@@ -569,6 +598,47 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-section">
+        <h5>Share with friends:</h5>
+        <div class="share-buttons">
+          ${
+            supportsNativeShare
+              ? `
+          <button class="share-button native-share-button">
+            Share
+          </button>
+          `
+              : ""
+          }
+          <a
+            class="share-button"
+            href="https://wa.me/?text=${shareData.encodedText}%20${shareData.encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share this activity on WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <a
+            class="share-button"
+            href="https://www.facebook.com/sharer/sharer.php?u=${shareData.encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share this activity on Facebook"
+          >
+            Facebook
+          </a>
+          <a
+            class="share-button"
+            href="https://x.com/intent/tweet?text=${shareData.encodedText}&url=${shareData.encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share this activity on X"
+          >
+            X
+          </a>
+        </div>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -585,6 +655,27 @@ document.addEventListener("DOMContentLoaded", () => {
           openRegistrationModal(name);
         });
       }
+    }
+
+    const nativeShareButton = activityCard.querySelector(".native-share-button");
+    if (nativeShareButton) {
+      nativeShareButton.addEventListener("click", async () => {
+        try {
+          await navigator.share({
+            title: shareData.shareTitle,
+            text: shareData.shareText,
+            url: shareData.activityUrl,
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            console.error("Error sharing activity:", error);
+            showMessage(
+              "Unable to share. Please use one of the other sharing options.",
+              "error"
+            );
+          }
+        }
+      });
     }
 
     activitiesList.appendChild(activityCard);
