@@ -50,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     afternoon: { start: "15:00", end: "18:00" }, // After school hours
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
+  const supportsNativeShare = typeof navigator.share === "function";
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -363,6 +364,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return "academic";
   }
 
+  function getShareData(name, details, formattedSchedule) {
+    const activityUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
+      name
+    )}`;
+    const shareTitle = `${name} at Mergington High School`;
+    const shareText = `Check out ${name}! ${details.description} Schedule: ${formattedSchedule}`;
+
+    return {
+      activityUrl,
+      shareTitle,
+      shareText,
+      encodedUrl: encodeURIComponent(activityUrl),
+      encodedText: encodeURIComponent(shareText),
+    };
+  }
+
   // Function to fetch activities from API with optional day and time filters
   async function fetchActivities() {
     // Show loading skeletons first
@@ -498,6 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareData = getShareData(name, details, formattedSchedule);
 
     // Create activity tag
     const tagHtml = `
@@ -569,6 +587,45 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-section">
+        <h5>Share with friends:</h5>
+        <div class="share-buttons">
+          <button class="share-button native-share-button ${
+            supportsNativeShare ? "" : "hidden"
+          }" data-activity="${name}">
+            Share
+          </button>
+          <a
+            class="share-button"
+            href="https://wa.me/?text=${encodeURIComponent(
+              `${shareData.shareText} ${shareData.activityUrl}`
+            )}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <a
+            class="share-button"
+            href="https://www.facebook.com/sharer/sharer.php?u=${shareData.encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on Facebook"
+          >
+            Facebook
+          </a>
+          <a
+            class="share-button"
+            href="https://twitter.com/intent/tweet?text=${shareData.encodedText}&url=${shareData.encodedUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on X"
+          >
+            X
+          </a>
+        </div>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -585,6 +642,24 @@ document.addEventListener("DOMContentLoaded", () => {
           openRegistrationModal(name);
         });
       }
+    }
+
+    const nativeShareButton = activityCard.querySelector(".native-share-button");
+    if (nativeShareButton && supportsNativeShare) {
+      nativeShareButton.addEventListener("click", async () => {
+        try {
+          await navigator.share({
+            title: shareData.shareTitle,
+            text: shareData.shareText,
+            url: shareData.activityUrl,
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            console.error("Error sharing activity:", error);
+            showMessage("Sharing is unavailable right now.", "error");
+          }
+        }
+      });
     }
 
     activitiesList.appendChild(activityCard);
