@@ -590,11 +590,15 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="share-section">
         <h5>Share with friends:</h5>
         <div class="share-buttons">
-          <button class="share-button native-share-button ${
-            supportsNativeShare ? "" : "hidden"
-          }" data-activity="${name}">
+          ${
+            supportsNativeShare
+              ? `
+          <button class="share-button native-share-button" data-activity="${name}">
             Share
           </button>
+          `
+              : ""
+          }
           <a
             class="share-button"
             href="https://wa.me/?text=${encodeURIComponent(
@@ -602,7 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
             )}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${name} on WhatsApp"
+            aria-label="Share this activity on WhatsApp"
           >
             WhatsApp
           </a>
@@ -611,16 +615,16 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://www.facebook.com/sharer/sharer.php?u=${shareData.encodedUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${name} on Facebook"
+            aria-label="Share this activity on Facebook"
           >
             Facebook
           </a>
           <a
             class="share-button"
-            href="https://twitter.com/intent/tweet?text=${shareData.encodedText}&url=${shareData.encodedUrl}"
+            href="https://x.com/intent/tweet?text=${shareData.encodedText}&url=${shareData.encodedUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${name} on X"
+            aria-label="Share this activity on X"
           >
             X
           </a>
@@ -645,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const nativeShareButton = activityCard.querySelector(".native-share-button");
-    if (nativeShareButton && supportsNativeShare) {
+    if (nativeShareButton) {
       nativeShareButton.addEventListener("click", async () => {
         try {
           await navigator.share({
